@@ -1,0 +1,44 @@
+:root {
+  --color-bg: #fff4f6;
+  --color-surface: #ffffff;
+  --color-surface-soft: #ffe6ec;
+
+  --color-primary: #d96b8a;
+  --color-primary-dark: #a93f61;
+  --color-primary-light: #efa7b8;
+
+  --color-accent: #f2b880;
+  --color-accent-soft: #ffe1bd;
+
+  --color-text: #2f1f25;
+  --color-text-muted: #7a5c66;
+
+  --color-success: #7fb685;
+  --color-warning: #d99a4e;
+  --color-error: #c94f6d;
+
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --shadow-soft: 0 16px 40px rgba(169, 63, 97, 0.14);
+
+  --font-family: "Outfit", sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-family);
+  background:
+    radial-gradient(circle at top left, #ffe1bd 0, transparent 34%),
+    linear-gradient(180deg, var(--color-bg), #ffffff);
+  color: var(--color-text);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
