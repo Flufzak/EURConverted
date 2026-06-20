@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import CurrencySelector from "./CurrencySelector.vue";
 import type { CurrencyCode, CurrencyOption } from "../types/currency";
 
@@ -21,9 +22,12 @@ const emit = defineEmits<{
   "update:currency": [value: CurrencyCode];
 }>();
 
+const amountInput = ref<HTMLInputElement | null>(null);
+
 function clearAmount() {
   if (!readonly && amount) {
     emit("update:amount", "");
+    amountInput.value?.focus();
   }
 }
 </script>
@@ -45,6 +49,7 @@ function clearAmount() {
     <label class="relative m-0 block">
       <p class="sr-only">{{ label }} amount</p>
       <input
+        ref="amountInput"
         class="min-h-12 bg-[var(--color-surface)] py-2 pl-4 pr-12 text-2xl font-extrabold leading-none text-[var(--color-primary-dark)] read-only:text-[var(--color-text)]"
         autocomplete="off"
         enterkeyhint="done"
@@ -63,6 +68,7 @@ function clearAmount() {
         class="amount-clear-button"
         type="button"
         aria-label="Clear amount"
+        @pointerdown.prevent
         @click="clearAmount"
       >
         <i class="pi pi-times text-sm" aria-hidden="true"></i>
