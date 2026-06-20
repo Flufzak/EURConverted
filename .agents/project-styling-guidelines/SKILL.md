@@ -7,6 +7,8 @@ description: Styling guidance for the EURConverted project. Use when Codex is as
 
 Use these instructions when working on styling in the EURConverted project.
 
+Before changing anything, inspect the relevant project files for the task. Do not rely on assumptions about current file contents.
+
 ## Required CSS Context
 
 Before making styling decisions, inspect:
@@ -26,7 +28,11 @@ When implementing component or page styling:
 
 - Prefer existing CSS variables from `base.css`.
 - Prefer existing global styles and utility classes from `main.css`.
-- Add local component classes only when the styling is specific to that component.
+- Use Tailwind utility classes for component and page styling.
+- Put reusable control overrides in `main.css` when global element rules, PrimeVue defaults, or repeated selector states would make Tailwind classes brittle.
+- Do not add scoped styles.
+- Do not use `span` elements in Vue templates. Use semantic elements, `div`, `p`, `small`, or other appropriate tags with Tailwind classes instead.
+- Do not hardcode colors outside CSS files. Component markup and scripts must use existing CSS variables or existing global classes such as `card`, `surface`, `success`, `warning`, `error`, and `muted`.
 - Avoid duplicating global rules already handled in `main.css`.
 - Keep Tailwind classes consistent with the project tokens and existing global CSS.
 

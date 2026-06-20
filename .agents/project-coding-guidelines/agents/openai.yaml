@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Coding Guidelines"
+  short_description: "Use project Vue, TypeScript, and API rules"
+  default_prompt: "Use $project-coding-guidelines when changing this project code."
