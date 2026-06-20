@@ -30,6 +30,10 @@ function clearAmount() {
     amountInput.value?.focus();
   }
 }
+
+function closeKeyboard() {
+  amountInput.value?.blur();
+}
 </script>
 
 <template>
@@ -62,6 +66,7 @@ function clearAmount() {
         @input="
           emit('update:amount', ($event.target as HTMLInputElement).value)
         "
+        @keydown.enter="closeKeyboard"
       />
       <button
         v-if="!readonly && amount"
