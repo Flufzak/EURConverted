@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Styling Guidelines"
+  short_description: "Use project CSS tokens and styling rules"
+  default_prompt: "Use $project-styling-guidelines when changing this project styling."
