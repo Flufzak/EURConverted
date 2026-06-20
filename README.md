@@ -23,7 +23,19 @@ Live rates come from Frankfurter:
 https://api.frankfurter.dev
 ```
 
-The app first asks for a direct pair:
+On startup while online, the app refreshes the three canonical pairs:
+
+```txt
+EUR -> AMD
+EUR -> USD
+AMD -> USD
+```
+
+Reverse rates are derived locally, so switching from `AMD -> EUR` does not need a separate request.
+
+All conversion math happens in the app. Frankfurter is only used to refresh the stored rate table.
+
+For each canonical pair, the app first asks for a direct pair:
 
 ```txt
 /v2/rate/{base}/{quote}
@@ -36,6 +48,10 @@ If that response is not usable, it tries the filtered rates endpoint:
 ```
 
 Only rate data comes from the API. Currency labels and symbols for the three supported currencies live locally in `src/data/currencies.ts`, because the app only needs EUR, AMD, and USD.
+
+The app does not fetch when the user only switches between supported currencies. It reads the cached rate set and refreshes the full set again only when the app opens online or the browser comes back online.
+
+If a canonical pair refresh fails, the app retries that pair once before falling back to cached data.
 
 ## About `PRO FEATURE ONLY`
 
@@ -60,10 +76,11 @@ EURConverted includes a service worker in `public/sw.js`.
 
 After the app has been opened once with internet:
 
-- The app shell is cached for offline launches.
-- Already loaded build assets are cached.
-- Successful Frankfurter rate responses are cached.
-- Parsed rates are also stored in `localStorage`.
+- Small shell files are precached during service-worker install.
+- Hashed build assets are cached at runtime after the app loads.
+- Successful Frankfurter rate responses are cached at runtime.
+- Parsed app-level rates are stored in one `localStorage` rate table.
+- The previous app-level rate table is replaced only after a full successful refresh.
 
 That means the installed app can open without internet after it has been visited once. It can convert currency pairs that were already fetched successfully before. A pair that has never been fetched cannot be created offline, because there is no rate to use yet.
 

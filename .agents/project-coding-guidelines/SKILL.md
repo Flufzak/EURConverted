@@ -21,10 +21,15 @@ Before changing anything, inspect the relevant project files for the task. Do no
 ## API And Data Rules
 
 - Use Frankfurter only for exchange-rate data, not for static display metadata when the app supports a fixed small set of currencies.
+- Fetch the three canonical supported pairs on app startup when online and again on the browser `online` event; do not fetch when the user merely switches between already supported currencies.
 - Fetch pair rates with `/v2/rate/{base}/{quote}` and keep `/v2/rates?base={base}&quotes={quote}` as a fallback shape when needed.
+- Retry a failed canonical pair refresh once before falling back to cached rates.
+- Derive reverse rates locally from fetched pair rates.
+- Keep conversion calculations in the app. Frankfurter is only for refreshing stored rates.
 - Validate successful HTTP responses before trusting them. A `200` response can still contain an unusable body such as `PRO FEATURE ONLY`.
-- Cache successful API rates in `localStorage` and fall back to cached rates when live requests fail.
+- Store app-level rates in one `localStorage` key as a rate table. Replace the old rate table only after a full successful refresh, then fall back to cached rates when live requests fail.
 - Keep service-worker API caching aligned with app-level cache behavior: cache only valid Frankfurter rate payloads and return cached API responses when offline.
+- Keep the service worker split between install-time precache for small shell files and runtime cache for hashed build assets/API responses.
 - Keep the app shell installable/offline-capable through `public/sw.js`; update its cache name when cached asset behavior changes.
 - Keep user-facing amounts formatted as `nl-BE` numbers with two decimals, such as `1.345,45`.
 - Keep user-facing dates formatted as `dd/mm/yyyy`.

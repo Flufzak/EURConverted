@@ -1,6 +1,7 @@
-import type { CachedRate, CurrencyCode } from '../types/currency'
+import type { CachedRate, CachedRateEntry, CurrencyCode, CurrencyPair } from '../types/currency'
 
 const apiBaseUrl = 'https://api.frankfurter.dev'
+const retryDelayMs = 350
 
 interface FrankfurterRateResponse {
   rate: number
@@ -57,7 +58,7 @@ async function fetchFilteredRate(base: CurrencyCode, quote: CurrencyCode): Promi
   return toCachedRate(rate)
 }
 
-export async function fetchRate(base: CurrencyCode, quote: CurrencyCode): Promise<CachedRate> {
+async function fetchRate(base: CurrencyCode, quote: CurrencyCode): Promise<CachedRate> {
   if (base === quote) {
     return {
       rate: 1,
@@ -70,4 +71,34 @@ export async function fetchRate(base: CurrencyCode, quote: CurrencyCode): Promis
   } catch {
     return fetchFilteredRate(base, quote)
   }
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms)
+  })
+}
+
+async function fetchRateWithRetry(base: CurrencyCode, quote: CurrencyCode): Promise<CachedRate> {
+  try {
+    return await fetchRate(base, quote)
+  } catch {
+    await delay(retryDelayMs)
+    return fetchRate(base, quote)
+  }
+}
+
+export async function fetchRateTable(pairs: CurrencyPair[]): Promise<CachedRateEntry[]> {
+  const rates = await Promise.all(
+    pairs.map(async ([base, quote]) => ({
+      base,
+      quote,
+      ...(await fetchRateWithRetry(base, quote)),
+    })),
+  )
+
+  return rates.flatMap(({ base, quote, rate, date }) => [
+    { base, quote, rate, date },
+    { base: quote, quote: base, rate: 1 / rate, date },
+  ])
 }

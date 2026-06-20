@@ -1,7 +1,7 @@
-import { computed, ref, watch } from "vue";
-import { currencies } from "../data/currencies";
-import { fetchRate } from "../services/frankfurterApi";
-import { readCachedRate, writeCachedRate } from "../services/rateCache";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { currencies, refreshRatePairs } from "../data/currencies";
+import { fetchRateTable } from "../services/frankfurterApi";
+import { readCachedRate, replaceCachedRates } from "../services/rateCache";
 import type { CachedRate, CurrencyCode } from "../types/currency";
 
 const amountFormatter = new Intl.NumberFormat("nl-BE", {
@@ -9,9 +9,14 @@ const amountFormatter = new Intl.NumberFormat("nl-BE", {
   maximumFractionDigits: 2,
 });
 
-let rateRequestId = 0;
+const preciseRateFormatter = new Intl.NumberFormat("nl-BE", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 4,
+});
 
-function formatRateDate(date: string) {
+let refreshRequestId = 0;
+
+function formatRateDate(date: string): string {
   const [year, month, day] = date.split("-");
 
   if (!year || !month || !day) {
@@ -25,6 +30,14 @@ function formatAmount(amount: number): string {
   return amountFormatter.format(amount);
 }
 
+function formatRate(rate: number): string {
+  if (rate !== 0 && Math.abs(rate) < 0.01) {
+    return preciseRateFormatter.format(rate);
+  }
+
+  return formatAmount(rate);
+}
+
 function parseAmount(amount: string): number {
   const normalizedAmount = amount.includes(",")
     ? amount.replaceAll(".", "").replace(",", ".")
@@ -32,6 +45,17 @@ function parseAmount(amount: string): number {
   const parsedValue = Number.parseFloat(normalizedAmount);
 
   return Number.isFinite(parsedValue) ? parsedValue : 0;
+}
+
+function getIdentityRate(): CachedRate {
+  return {
+    rate: 1,
+    date: new Date().toISOString().slice(0, 10),
+  };
+}
+
+function isBrowserOnline(): boolean {
+  return typeof navigator === "undefined" ? true : navigator.onLine;
 }
 
 export function useCurrencyConverter() {
@@ -52,9 +76,7 @@ export function useCurrencyConverter() {
       return "...";
     }
 
-    const convertedValue = numericSourceAmount.value * activeRate.value.rate;
-
-    return formatAmount(convertedValue);
+    return formatAmount(numericSourceAmount.value * activeRate.value.rate);
   });
 
   const rateText = computed<string>(() => {
@@ -62,7 +84,7 @@ export function useCurrencyConverter() {
       return "Rate unavailable";
     }
 
-    return `1,00 ${sourceCurrency.value} = ${formatAmount(activeRate.value.rate)} ${targetCurrency.value}`;
+    return `1,00 ${sourceCurrency.value} = ${formatRate(activeRate.value.rate)} ${targetCurrency.value}`;
   });
 
   const updatedText = computed<string>(() => {
@@ -85,40 +107,51 @@ export function useCurrencyConverter() {
     isStatusWarning.value ? "Offline" : "Online",
   );
 
-  async function loadRate() {
-    rateError.value = null;
-    const requestId = ++rateRequestId;
+  function setActiveRateFromCache(isStoredFallback: boolean) {
+    if (sourceCurrency.value === targetCurrency.value) {
+      activeRate.value = getIdentityRate();
+      isUsingStoredRate.value = false;
+      return;
+    }
+
     const storedRate = readCachedRate(
       sourceCurrency.value,
       targetCurrency.value,
     );
 
-    if (storedRate) {
-      activeRate.value = storedRate;
-      isUsingStoredRate.value = false;
+    activeRate.value = storedRate;
+    isUsingStoredRate.value = Boolean(storedRate) && isStoredFallback;
+  }
+
+  async function refreshRates() {
+    if (!isBrowserOnline()) {
+      rateError.value = "Could not load exchange rate";
+      setActiveRateFromCache(true);
       return;
     }
 
+    const requestId = ++refreshRequestId;
     isRateLoading.value = true;
+    rateError.value = null;
 
     try {
-      const rate = await fetchRate(sourceCurrency.value, targetCurrency.value);
+      const rates = await fetchRateTable(refreshRatePairs);
 
-      if (requestId !== rateRequestId) {
+      if (requestId !== refreshRequestId) {
         return;
       }
 
-      activeRate.value = rate;
-      isUsingStoredRate.value = false;
-      writeCachedRate(sourceCurrency.value, targetCurrency.value, rate);
+      replaceCachedRates(rates);
+      setActiveRateFromCache(false);
     } catch {
-      if (requestId !== rateRequestId) {
+      if (requestId !== refreshRequestId) {
         return;
       }
 
       rateError.value = "Could not load exchange rate";
+      setActiveRateFromCache(true);
     } finally {
-      if (requestId === rateRequestId) {
+      if (requestId === refreshRequestId) {
         isRateLoading.value = false;
       }
     }
@@ -130,7 +163,32 @@ export function useCurrencyConverter() {
     sourceCurrency.value = nextSource;
   }
 
-  watch([sourceCurrency, targetCurrency], loadRate, { immediate: true });
+  function handleOnline() {
+    refreshRates();
+  }
+
+  function handleOffline() {
+    rateError.value = "Could not load exchange rate";
+    setActiveRateFromCache(true);
+  }
+
+  watch(
+    [sourceCurrency, targetCurrency],
+    () =>
+      setActiveRateFromCache(!isBrowserOnline() || Boolean(rateError.value)),
+    { immediate: true },
+  );
+
+  onMounted(() => {
+    refreshRates();
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+  });
+
+  onBeforeUnmount(() => {
+    window.removeEventListener("online", handleOnline);
+    window.removeEventListener("offline", handleOffline);
+  });
 
   return {
     currencies,
