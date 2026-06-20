@@ -243,6 +243,18 @@ th {
   padding: 1.5rem;
 }
 
+.app-shell {
+  display: grid;
+  min-height: calc(100dvh - clamp(2rem, 8vw, 4rem));
+  margin-bottom: 0;
+  place-items: center;
+  padding-block: 0.5rem;
+}
+
+.converter-card {
+  margin-bottom: 0;
+}
+
 .surface {
   border-radius: var(--radius-sm);
   background: var(--color-surface-soft);

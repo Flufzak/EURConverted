@@ -26,7 +26,7 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
   font-family: var(--font-family);
   background:
     radial-gradient(circle at top left, #ffe1bd 0, transparent 34%),
