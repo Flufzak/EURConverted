@@ -188,6 +188,31 @@ button:disabled {
   transform: none;
 }
 
+.amount-clear-button {
+  position: absolute;
+  z-index: 2;
+  right: 0.375rem;
+  top: 50%;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-muted);
+  line-height: 1;
+  padding: 0;
+  transform: translateY(-50%);
+}
+
+.amount-clear-button:hover {
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-primary-dark);
+  transform: translateY(-50%);
+}
+
 table {
   width: 100%;
   margin: 1.5rem 0;
