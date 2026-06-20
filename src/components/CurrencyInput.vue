@@ -20,6 +20,12 @@ const emit = defineEmits<{
   "update:amount": [value: string];
   "update:currency": [value: CurrencyCode];
 }>();
+
+function clearAmount() {
+  if (!readonly && amount) {
+    emit("update:amount", "");
+  }
+}
 </script>
 
 <template>
@@ -36,10 +42,10 @@ const emit = defineEmits<{
       @update:model-value="emit('update:currency', $event)"
     />
 
-    <label class="m-0">
+    <label class="relative m-0 block">
       <p class="sr-only">{{ label }} amount</p>
       <input
-        class="min-h-12 bg-[var(--color-surface)] px-4 py-2 text-2xl font-extrabold leading-none text-[var(--color-primary-dark)] read-only:text-[var(--color-text)]"
+        class="min-h-12 bg-[var(--color-surface)] py-2 pl-4 pr-12 text-2xl font-extrabold leading-none text-[var(--color-primary-dark)] read-only:text-[var(--color-text)]"
         autocomplete="off"
         enterkeyhint="done"
         inputmode="decimal"
@@ -52,6 +58,15 @@ const emit = defineEmits<{
           emit('update:amount', ($event.target as HTMLInputElement).value)
         "
       />
+      <button
+        v-if="!readonly && amount"
+        class="amount-clear-button"
+        type="button"
+        aria-label="Clear amount"
+        @click="clearAmount"
+      >
+        <i class="pi pi-times text-sm" aria-hidden="true"></i>
+      </button>
     </label>
   </div>
 </template>
