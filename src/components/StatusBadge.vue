@@ -20,7 +20,7 @@ const toneClass = computed(() => {
 
 <template>
   <p
-    class="m-0 inline-flex min-h-8 items-center justify-center rounded-full px-3 py-1.5 text-xs font-extrabold"
+    class="m-0 inline-flex min-h-8 items-center justify-center rounded-[var(--radius-sm)] px-3 py-1.5 text-xs font-extrabold"
     :class="toneClass"
   >
     <slot />

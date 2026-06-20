@@ -193,7 +193,7 @@ table {
   margin: 1.5rem 0;
   border-collapse: collapse;
   overflow: hidden;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
 }
 
 th,
@@ -211,7 +211,7 @@ th {
 }
 
 .card {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   box-shadow: var(--shadow-soft);
   margin-bottom: 1.25rem;
@@ -219,7 +219,7 @@ th {
 }
 
 .surface {
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--color-surface-soft);
   margin-bottom: 1rem;
   padding: 1rem;
@@ -259,7 +259,7 @@ th {
   min-height: 3rem;
   align-items: center;
   gap: 0.7rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   color: var(--color-text);
   padding: 0.62rem 0.75rem;
@@ -331,7 +331,7 @@ th {
   top: calc(100% + 0.45rem);
   display: grid;
   gap: 0.25rem;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
   box-shadow: var(--shadow-soft);
   padding: 0.35rem;
@@ -352,10 +352,13 @@ th {
   margin: 0.35rem 0;
   padding: 0;
   box-shadow: var(--shadow-soft);
+  transition:
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 260ms ease;
 }
 
 .swap-button:hover {
   background: var(--color-primary-dark);
   box-shadow: var(--shadow-soft);
-  transform: translateY(-1px) rotate(6deg);
 }

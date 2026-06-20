@@ -1,14 +1,12 @@
-const APP_CACHE = "eurconverted-app-v1";
+const PRECACHE = "eurconverted-precache-v1";
+const RUNTIME_CACHE = "eurconverted-runtime-v1";
 const API_CACHE = "eurconverted-api-v1";
-const APP_SHELL_URLS = [
+const PRECACHE_URLS = [
   "/",
   "/index.html",
   "/manifest.webmanifest",
   "/favicon.ico",
   "/icons/180.png",
-  "/icons/192.png",
-  "/icons/512.png",
-  "/icons/maskable.png",
 ];
 
 function isFrankfurterRequest(request) {
@@ -29,13 +27,13 @@ function isValidRatePayload(data) {
   return typeof data?.rate === "number";
 }
 
-async function cacheAppShell() {
-  const cache = await caches.open(APP_CACHE);
-  await cache.addAll(APP_SHELL_URLS);
+async function precacheSmallAppShell() {
+  const cache = await caches.open(PRECACHE);
+  await cache.addAll(PRECACHE_URLS);
 }
 
 async function cacheLoadedAssets(urls) {
-  const cache = await caches.open(APP_CACHE);
+  const cache = await caches.open(RUNTIME_CACHE);
   const sameOriginUrls = urls.filter((url) => new URL(url).origin === self.location.origin);
 
   await Promise.allSettled(
@@ -50,18 +48,23 @@ async function cacheLoadedAssets(urls) {
 }
 
 async function handleAppRequest(request) {
-  const cache = await caches.open(APP_CACHE);
+  const runtimeCache = await caches.open(RUNTIME_CACHE);
+  const precache = await caches.open(PRECACHE);
 
   try {
     const response = await fetch(request);
 
     if (response.ok) {
-      await cache.put(request, response.clone());
+      await runtimeCache.put(request, response.clone());
     }
 
     return response;
   } catch {
-    return (await cache.match(request)) ?? cache.match("/");
+    return (
+      (await runtimeCache.match(request)) ??
+      (await precache.match(request)) ??
+      precache.match("/")
+    );
   }
 }
 
@@ -97,7 +100,7 @@ async function handleApiRequest(request) {
 }
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(cacheAppShell());
+  event.waitUntil(precacheSmallAppShell());
   self.skipWaiting();
 });
 
