@@ -1,7 +1,11 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { currencies, refreshRatePairs } from "../data/currencies";
 import { fetchRateTable } from "../services/frankfurterApi";
-import { readCachedRate, replaceCachedRates } from "../services/rateCache";
+import {
+  hydrateCachedRates,
+  readCachedRate,
+  replaceCachedRates,
+} from "../services/rateCache";
 import type { CachedRate, CurrencyCode } from "../types/currency";
 
 const amountFormatter = new Intl.NumberFormat("nl-BE", {
@@ -141,7 +145,7 @@ export function useCurrencyConverter() {
         return;
       }
 
-      replaceCachedRates(rates);
+      await replaceCachedRates(rates);
       setActiveRateFromCache(false);
     } catch {
       if (requestId !== refreshRequestId) {
@@ -172,6 +176,12 @@ export function useCurrencyConverter() {
     setActiveRateFromCache(true);
   }
 
+  async function initializeRates() {
+    await hydrateCachedRates();
+    setActiveRateFromCache(!isBrowserOnline() || Boolean(rateError.value));
+    await refreshRates();
+  }
+
   watch(
     [sourceCurrency, targetCurrency],
     () =>
@@ -180,7 +190,7 @@ export function useCurrencyConverter() {
   );
 
   onMounted(() => {
-    refreshRates();
+    initializeRates();
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
   });
